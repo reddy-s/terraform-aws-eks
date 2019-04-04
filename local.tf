@@ -1,6 +1,29 @@
 locals {
   asg_tags = ["${null_resource.tags_as_list_of_maps.*.triggers}"]
 
+  launch_template_tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
+
+  stack_tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
+      map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
+      map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
+      map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
+      map("key", "EKS", "value", "true", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
+
+  autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
+
   # Followed recommendation http://67bricks.com/blog/?p=85
   # to workaround terraform not supporting short circut evaluation
   cluster_security_group_id = "${coalesce(join("", aws_security_group.cluster.*.id), var.cluster_security_group_id)}"
@@ -8,40 +31,6 @@ locals {
   worker_security_group_id = "${coalesce(join("", aws_security_group.workers.*.id), var.worker_security_group_id)}"
   default_iam_role_id      = "${element(concat(aws_iam_role.workers.*.id, list("")), 0)}"
   kubeconfig_name          = "${var.kubeconfig_name == "" ? "eks_${var.cluster_name}" : var.kubeconfig_name}"
-
-  workers_group_defaults_defaults = {
-    name                          = "count.index"                   # Name of the worker group. Literal count.index will never be used but if name is not set, the count.index interpolation will be used.
-    ami_id                        = "${data.aws_ami.eks_worker.id}" # AMI ID for the eks workers. If none is provided, Terraform will search for the latest version of their EKS optimized worker AMI.
-    asg_desired_capacity          = "1"                             # Desired worker capacity in the autoscaling group.
-    asg_max_size                  = "3"                             # Maximum worker capacity in the autoscaling group.
-    asg_min_size                  = "1"                             # Minimum worker capacity in the autoscaling group.
-    asg_force_delete              = false                           # Enable forced deletion for the autoscaling group.
-    instance_type                 = "m4.large"                      # Size of the workers instances.
-    spot_price                    = ""                              # Cost of spot instance.
-    placement_tenancy             = ""                              # The tenancy of the instance. Valid values are "default" or "dedicated".
-    root_volume_size              = "100"                           # root volume size of workers instances.
-    root_volume_type              = "gp2"                           # root volume type of workers instances, can be 'standard', 'gp2', or 'io1'
-    root_iops                     = "0"                             # The amount of provisioned IOPS. This must be set with a volume_type of "io1".
-    key_name                      = ""                              # The key name that should be used for the instances in the autoscaling group
-    pre_userdata                  = ""                              # userdata to pre-append to the default userdata.
-    bootstrap_extra_args          = ""                              # Extra arguments passed to the bootstrap.sh script from the EKS AMI.
-    additional_userdata           = ""                              # userdata to append to the default userdata.
-    ebs_optimized                 = true                            # sets whether to use ebs optimization on supported types.
-    enable_monitoring             = true                            # Enables/disables detailed monitoring.
-    public_ip                     = false                           # Associate a public ip address with a worker
-    kubelet_extra_args            = ""                              # This string is passed directly to kubelet if set. Useful for adding labels or taints.
-    subnets                       = "${join(",", var.subnets)}"     # A comma delimited string of subnets to place the worker nodes in. i.e. subnet-123,subnet-456,subnet-789
-    autoscaling_enabled           = false                           # Sets whether policy and matching tags will be added to allow autoscaling.
-    additional_security_group_ids = ""                              # A comma delimited list of additional security group ids to include in worker launch config
-    protect_from_scale_in         = false                           # Prevent AWS from scaling in, so that cluster-autoscaler is solely responsible.
-    iam_role_id                   = "${local.default_iam_role_id}"  # Use the specified IAM role if set.
-    suspended_processes           = ""                              # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
-    target_group_arns             = ""                              # A comma delimited list of ALB target group ARNs to be associated to the ASG
-    enabled_metrics               = ""                              # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
-    placement_group               = ""                              # The name of the placement group into which to launch the instances, if any.
-  }
-
-  workers_group_defaults = "${merge(local.workers_group_defaults_defaults, var.workers_group_defaults)}"
 
   workers_group_launch_template_defaults_defaults = {
     name                                     = "count.index"                                 # Name of the worker group. Literal count.index will never be used but if name is not set, the count.index interpolation will be used.
@@ -51,11 +40,11 @@ locals {
     asg_max_size                             = "3"                                           # Maximum worker capacity in the autoscaling group.
     asg_min_size                             = "1"                                           # Minimum worker capacity in the autoscaling group.
     asg_force_delete                         = false                                         # Enable forced deletion for the autoscaling group.
-    instance_type                            = "m4.large"                                    # Size of the workers instances.
+    instance_type                            = "c5.large"                                    # Size of the workers instances.
     override_instance_type                   = "t3.large"                                    # Need to specify at least one additional instance type for mixed instances policy. The instance_type holds  higher priority for on demand instances.
     on_demand_allocation_strategy            = "prioritized"                                 # Strategy to use when launching on-demand instances. Valid values: prioritized.
-    on_demand_base_capacity                  = "0"                                           # Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances
-    on_demand_percentage_above_base_capacity = "100"                                         # Percentage split between on-demand and Spot instances above the base on-demand capacity
+    on_demand_base_capacity                  = 0                                             # Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances
+    on_demand_percentage_above_base_capacity = 100                                           # Percentage split between on-demand and Spot instances above the base on-demand capacity
     spot_allocation_strategy                 = "lowest-price"                                # The only valid value is lowest-price, which is also the default value. The Auto Scaling group selects the cheapest Spot pools and evenly allocates your Spot capacity across the number of Spot pools that you specify.
     spot_instance_pools                      = 10                                            # "Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify."
     spot_max_price                           = ""                                            # Maximum price per unit hour that the user is willing to pay for the Spot instances. Default is the on-demand price
@@ -81,7 +70,66 @@ locals {
     iam_role_id                              = "${local.default_iam_role_id}"                # Use the specified IAM role if set.
     suspended_processes                      = ""                                            # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
     target_group_arns                        = ""                                            # A comma delimited list of ALB target group ARNs to be associated to the ASG
-    enabled_metrics                          = ""                                            # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
+    credit_specification                     = []                                            # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+    disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
+    elastic_gpu_specifications               = []                                            # Specifications of Elastic GPU to attach to the instances
+    instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
+    instance_market_options                  = []                                            # The market (purchasing) option for the instances
+
+    enabled_metrics = ["GroupMinSize", "GroupMaxSize",
+      "GroupDesiredCapacity",
+      "GroupInServiceInstances",
+      "GroupPendingInstances",
+      "GroupStandbyInstances",
+      "GroupTerminatingInstances",
+      "GroupTotalInstances",
+    ] # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
+
+    ### Cloudformation settings
+    service_linked_role_arn                                   = ""          # The ARN of the service-linked role that the ASG will use to call other AWS services
+    placement_group                                           = ""          # The name of an existing cluster placement group into which you want to launch your instances
+    cfn_update_policy_ignore_unmodified_group_size_properties = true        # Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group.
+    cfn_update_policy_wait_on_resource_signals                = true        # Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds.
+    node_drain_enabled                                        = "false"     # When enabled, `kubectl drain` is run when the instance is being replaced by the auto scaling group.
+    drainer_heartbeat_timeout                                 = 300         # The amount of time (in seconds) that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Amazon EC2 Auto Scaling performs the action that you specified in the DefaultResult property.
+    cfn_update_policy_pause_time                              = "PT1M"      # The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group.
+    health_check_type                                         = "EC2"       # Controls how health checking is done. Valid values are `EC2` or `ELB`
+    health_check_grace_period                                 = 300         # Time (in seconds) after instance comes into service before checking health
+    termination_policies                                      = ["Default"] # A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`
+    metrics_granularity                                       = "1Minute"   # The granularity to associate with the metrics to collect. The only valid value is 1Minute
+    default_cooldown                                          = 300         # The amount of time, in seconds, after a scaling activity completes before another scaling activity can start
+    cfn_update_policy_max_batch_size                          = 1           # Specifies the maximum number of instances that AWS CloudFormation updates.
+
+    cfn_update_policy_suspended_processes = ["HealthCheck",
+      "ReplaceUnhealthy",
+      "AZRebalance",
+      "AlarmNotification",
+      "ScheduledActions",
+    ] # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
+
+    cfn_creation_policy_min_successful_instances_percent = 67             # Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created.
+    cfn_signal_count                                     = 1              # cfn_signal_count
+    cfn_deletion_policy                                  = "Retain"       # With the DeletionPolicy attribute you can preserve or (in some cases) backup a resource when its stack is deleted. You specify a DeletionPolicy attribute for each resource that you want to control. If a resource has no DeletionPolicy attribute, AWS CloudFormation deletes the resource by default. Allowed values: `Delete`, `Retain`, `Snapshot`
+    cfn_stack_on_failure                                 = "ROLLBACK"     # Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE.
+    cfn_region                                           = "eu-central-1" # The AWS CloudFormation regional endpoint to use
+
+    ### Autoscaling policies + alarms settings
+    scale_up_scaling_adjustment             = 1                  # The number of instances by which to scale. `scale_up_adjustment_type` determines the interpretation of this number (e.g. as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity
+    scale_up_adjustment_type                = "ChangeInCapacity" # Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity` and `PercentChangeInCapacity`
+    scale_up_policy_type                    = "SimpleScaling"    # The scalling policy type, either `SimpleScaling`, `StepScaling` or `TargetTrackingScaling`
+    scale_up_cooldown_seconds               = "300"              # The amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start
+    scale_down_scaling_adjustment           = -1                 # The number of instances by which to scale. `scale_down_scaling_adjustment` determines the interpretation of this number (e.g. as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity
+    scale_down_adjustment_type              = "ChangeInCapacity" # Specifies whether the adjustment is an absolute number or a percentage of the current capacity. Valid values are `ChangeInCapacity`, `ExactCapacity` and `PercentChangeInCapacity`
+    scale_down_policy_type                  = "SimpleScaling"    # The scalling policy type, either `SimpleScaling`, `StepScaling` or `TargetTrackingScaling`
+    scale_down_cooldown_seconds             = "300"              # The amount of time, in seconds, after a scaling activity completes and before the next scaling activity can start
+    cpu_utilization_high_evaluation_periods = "2"                # The number of periods over which data is compared to the specified threshold
+    cpu_utilization_high_period_seconds     = "300"              # The period in seconds over which the specified statistic is applied
+    cpu_utilization_high_statistic          = "Average"          # The statistic to apply to the alarm's associated metric. Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+    cpu_utilization_high_threshold_percent  = "90"               # The value against which the specified statistic is compared
+    cpu_utilization_low_evaluation_periods  = "2"                # The number of periods over which data is compared to the specified threshold
+    cpu_utilization_low_period_seconds      = "300"              # The period in seconds over which the specified statistic is applied
+    cpu_utilization_low_statistic           = "Average"          # The statistic to apply to the alarm's associated metric. Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
+    cpu_utilization_low_threshold_percent   = "10"               # The value against which the specified statistic is compared
   }
 
   workers_group_launch_template_defaults = "${merge(local.workers_group_launch_template_defaults_defaults, var.workers_group_launch_template_defaults)}"

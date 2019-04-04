@@ -83,38 +83,6 @@ variable "vpc_id" {
   description = "VPC where the cluster and workers will be deployed."
 }
 
-variable "worker_groups" {
-  description = "A list of maps defining worker group configurations to be defined using AWS Launch Configurations. See workers_group_defaults for valid keys."
-  type        = "list"
-
-  default = [
-    {
-      "name" = "default"
-    },
-  ]
-}
-
-variable "worker_group_count" {
-  description = "The number of maps contained within the worker_groups list."
-  type        = "string"
-  default     = "1"
-}
-
-variable "workers_group_defaults" {
-  description = "Override default values for target groups. See workers_group_defaults_defaults in local.tf for valid keys."
-  type        = "map"
-  default     = {}
-}
-
-variable "worker_group_tags" {
-  description = "A map defining extra tags to be applied to the worker group ASG."
-  type        = "map"
-
-  default = {
-    default = []
-  }
-}
-
 variable "worker_groups_launch_template" {
   description = "A list of maps defining worker group configurations to be defined using AWS Launch Templates. See workers_group_defaults for valid keys."
   type        = "list"
@@ -250,4 +218,9 @@ variable "cluster_endpoint_private_access" {
 variable "cluster_endpoint_public_access" {
   description = "Indicates whether or not the Amazon EKS public API server endpoint is enabled."
   default     = true
+}
+
+variable "autoscaling_policies_enabled" {
+  description = "Setup autoscaling policies on worker groups. Can be used instead of cluster autoscale, but should not be turned on if cluster autoscale is enabled"
+  default     = "false"
 }

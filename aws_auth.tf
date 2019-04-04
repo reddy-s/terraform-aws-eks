@@ -43,20 +43,11 @@ data "template_file" "launch_template_worker_role_arns" {
   }
 }
 
-data "template_file" "worker_role_arns" {
-  count    = "${var.worker_group_count}"
-  template = "${file("${path.module}/templates/worker-role.tpl")}"
-
-  vars {
-    worker_role_arn = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/${element(aws_iam_instance_profile.workers.*.role, count.index)}"
-  }
-}
-
 data "template_file" "config_map_aws_auth" {
   template = "${file("${path.module}/templates/config-map-aws-auth.yaml.tpl")}"
 
   vars {
-    worker_role_arn = "${join("", distinct(concat(data.template_file.launch_template_worker_role_arns.*.rendered, data.template_file.worker_role_arns.*.rendered)))}"
+    worker_role_arn = "${join("", data.template_file.launch_template_worker_role_arns.*.rendered)}"
     map_users       = "${join("", data.template_file.map_users.*.rendered)}"
     map_roles       = "${join("", data.template_file.map_roles.*.rendered)}"
     map_accounts    = "${join("", data.template_file.map_accounts.*.rendered)}"

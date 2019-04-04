@@ -56,12 +56,12 @@ output "kubeconfig_filename" {
 
 output "workers_asg_arns" {
   description = "IDs of the autoscaling groups containing workers."
-  value       = "${concat(aws_autoscaling_group.workers.*.arn, aws_autoscaling_group.workers_launch_template.*.arn)}"
+  value       = "${data.aws_autoscaling_group.workers_launch_template.*.arn}"
 }
 
 output "workers_asg_names" {
   description = "Names of the autoscaling groups containing workers."
-  value       = "${concat(aws_autoscaling_group.workers.*.id, aws_autoscaling_group.workers_launch_template.*.id)}"
+  value       = "${data.aws_autoscaling_group.workers_launch_template.*.id}"
 }
 
 output "worker_security_group_id" {

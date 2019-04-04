@@ -71,21 +71,6 @@ EOF
   }
 }
 
-data "template_file" "userdata" {
-  template = "${file("${path.module}/templates/userdata.sh.tpl")}"
-  count    = "${var.worker_group_count}"
-
-  vars {
-    cluster_name         = "${aws_eks_cluster.this.name}"
-    endpoint             = "${aws_eks_cluster.this.endpoint}"
-    cluster_auth_base64  = "${aws_eks_cluster.this.certificate_authority.0.data}"
-    pre_userdata         = "${lookup(var.worker_groups[count.index], "pre_userdata", local.workers_group_defaults["pre_userdata"])}"
-    additional_userdata  = "${lookup(var.worker_groups[count.index], "additional_userdata", local.workers_group_defaults["additional_userdata"])}"
-    bootstrap_extra_args = "${lookup(var.worker_groups[count.index], "bootstrap_extra_args", local.workers_group_defaults["bootstrap_extra_args"])}"
-    kubelet_extra_args   = "${lookup(var.worker_groups[count.index], "kubelet_extra_args", local.workers_group_defaults["kubelet_extra_args"])}"
-  }
-}
-
 data "template_file" "launch_template_userdata" {
   template = "${file("${path.module}/templates/userdata.sh.tpl")}"
   count    = "${var.worker_group_launch_template_count}"
@@ -94,6 +79,9 @@ data "template_file" "launch_template_userdata" {
     cluster_name         = "${aws_eks_cluster.this.name}"
     endpoint             = "${aws_eks_cluster.this.endpoint}"
     cluster_auth_base64  = "${aws_eks_cluster.this.certificate_authority.0.data}"
+    stack_name           = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
+    resource             = "ASG"
+    region               = "${lookup(var.worker_groups_launch_template[count.index], "cfn_region", local.workers_group_launch_template_defaults["cfn_region"])}"
     pre_userdata         = "${lookup(var.worker_groups_launch_template[count.index], "pre_userdata", local.workers_group_launch_template_defaults["pre_userdata"])}"
     additional_userdata  = "${lookup(var.worker_groups_launch_template[count.index], "additional_userdata", local.workers_group_launch_template_defaults["additional_userdata"])}"
     bootstrap_extra_args = "${lookup(var.worker_groups_launch_template[count.index], "bootstrap_extra_args", local.workers_group_launch_template_defaults["bootstrap_extra_args"])}"

@@ -8,3 +8,6 @@ ${pre_userdata}
 
 # Allow user supplied userdata code
 ${additional_userdata}
+
+# Signal to Cloudformation stack
+/opt/aws/bin/cfn-signal --exit-code $? --stack '${stack_name}' --resource '${resource}' --region '${region}'
