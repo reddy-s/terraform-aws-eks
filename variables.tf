@@ -190,16 +190,6 @@ variable "local_exec_interpreter" {
   default     = ["/bin/sh", "-c"]
 }
 
-variable "cluster_create_security_group" {
-  description = "Whether to create a security group for the cluster or attach the cluster to `cluster_security_group_id`."
-  default     = true
-}
-
-variable "worker_create_security_group" {
-  description = "Whether to create a security group for the workers or attach the workers to `worker_security_group_id`."
-  default     = true
-}
-
 variable "permissions_boundary" {
   description = "If provided, all IAM roles will be created with this permissions boundary attached."
   default     = ""
@@ -221,7 +211,7 @@ variable "cluster_endpoint_public_access" {
 }
 
 variable "autoscaling_policies_enabled" {
-  description = "Setup autoscaling policies on worker groups. Can be used instead of cluster autoscale, but should not be turned on if cluster autoscale is enabled"
+  description = "Setup autoscaling policies on worker groups. Can be used instead of cluster autoscaler, but should not be turned on if cluster autoscale is enabled"
   default     = "false"
 }
 
@@ -243,4 +233,28 @@ variable "enabled" {
   type        = "string"
   description = "Whether to create the resources. Set to `false` to prevent the module from creating any resources"
   default     = "true"
+}
+
+variable "allowed_security_groups_cluster" {
+  type        = "list"
+  default     = []
+  description = "List of Security Group IDs to be allowed to connect to the EKS cluster"
+}
+
+variable "allowed_cidr_blocks_cluster" {
+  type        = "list"
+  default     = []
+  description = "List of CIDR blocks to be allowed to connect to the EKS cluster"
+}
+
+variable "allowed_security_groups_workers" {
+  type        = "list"
+  default     = []
+  description = "List of Security Group IDs to be allowed to connect to the worker groups"
+}
+
+variable "allowed_cidr_blocks_workers" {
+  type        = "list"
+  default     = []
+  description = "List of CIDR blocks to be allowed to connect to the worker groups"
 }

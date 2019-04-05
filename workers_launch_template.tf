@@ -129,7 +129,7 @@ resource "aws_security_group" "workers" {
   name_prefix = "${aws_eks_cluster.this.name}"
   description = "Security group for all nodes in the cluster."
   vpc_id      = "${var.vpc_id}"
-  count       = "${var.worker_create_security_group ? 1 : 0}"
+  count       = "${var.enabled ? 1 : 0}"
   tags        = "${merge(var.tags, map("Name", "${aws_eks_cluster.this.name}-eks_worker_sg", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "owned"
   ))}"
 }
@@ -137,56 +137,76 @@ resource "aws_security_group" "workers" {
 resource "aws_security_group_rule" "workers_egress_internet" {
   description       = "Allow nodes all egress to the Internet."
   protocol          = "-1"
-  security_group_id = "${aws_security_group.workers.id}"
+  security_group_id = "${join("", aws_security_group.workers.*.id)}"
   cidr_blocks       = ["0.0.0.0/0"]
   from_port         = 0
   to_port           = 0
   type              = "egress"
-  count             = "${var.worker_create_security_group ? 1 : 0}"
+  count             = "${var.enabled ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_self" {
   description              = "Allow node to communicate with each other."
   protocol                 = "-1"
-  security_group_id        = "${aws_security_group.workers.id}"
-  source_security_group_id = "${aws_security_group.workers.id}"
+  security_group_id        = "${join("", aws_security_group.workers.*.id)}"
+  source_security_group_id = "${join("", aws_security_group.workers.*.id)}"
   from_port                = 0
   to_port                  = 65535
   type                     = "ingress"
-  count                    = "${var.worker_create_security_group ? 1 : 0}"
+  count                    = "${var.enabled ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_cluster" {
   description              = "Allow workers pods to receive communication from the cluster control plane."
   protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.workers.id}"
+  security_group_id        = "${join("", aws_security_group.workers.*.id)}"
   source_security_group_id = "${local.cluster_security_group_id}"
   from_port                = "${var.worker_sg_ingress_from_port}"
   to_port                  = 65535
   type                     = "ingress"
-  count                    = "${var.worker_create_security_group ? 1 : 0}"
+  count                    = "${var.enabled == "true" ? 1 : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_cluster_kubelet" {
   description              = "Allow workers Kubelets to receive communication from the cluster control plane."
   protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.workers.id}"
+  security_group_id        = "${join("", aws_security_group.workers.*.id)}"
   source_security_group_id = "${local.cluster_security_group_id}"
   from_port                = 10250
   to_port                  = 10250
   type                     = "ingress"
-  count                    = "${var.worker_create_security_group ? (var.worker_sg_ingress_from_port > 10250 ? 1 : 0) : 0}"
+  count                    = "${var.enabled ? (var.worker_sg_ingress_from_port > 10250 ? 1 : 0) : 0}"
 }
 
 resource "aws_security_group_rule" "workers_ingress_cluster_https" {
   description              = "Allow pods running extension API servers on port 443 to receive communication from cluster control plane."
   protocol                 = "tcp"
-  security_group_id        = "${aws_security_group.workers.id}"
+  security_group_id        = "${join("", aws_security_group.workers.*.id)}"
   source_security_group_id = "${local.cluster_security_group_id}"
   from_port                = 443
   to_port                  = 443
   type                     = "ingress"
-  count                    = "${var.worker_create_security_group ? 1 : 0}"
+  count                    = "${var.enabled ? 1 : 0}"
+}
+resource "aws_security_group_rule" "ingress_security_groups" {
+  count                    = "${var.enabled == "true" ? length(var.allowed_security_groups_workers) : 0}"
+  description              = "Allow inbound traffic from existing Security Groups"
+  from_port                = 0
+  to_port                  = 65535
+  protocol                 = "-1"
+  source_security_group_id = "${element(var.allowed_security_groups_workers, count.index)}"
+  security_group_id        = "${join("", aws_security_group.workers.*.id)}"
+  type                     = "ingress"
+}
+resource "aws_security_group_rule" "ingress_cidr_blocks" {
+  count             = "${var.enabled == "true" && length(var.allowed_cidr_blocks_workers) > 0 ? 1 : 0}"
+  description       = "Allow inbound traffic from CIDR blocks"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["${var.allowed_cidr_blocks_workers}"]
+  security_group_id = "${join("", aws_security_group.workers.*.id)}"
+  type              = "ingress"
 }
 
 resource "aws_iam_role" "workers" {
