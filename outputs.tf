@@ -78,3 +78,18 @@ output "worker_iam_role_arn" {
   description = "default IAM role ARN for EKS worker groups"
   value       = "${aws_iam_role.workers.arn}"
 }
+
+output "kube_node_drainer_asg_ds" {
+  description = "Kubernetes daemonset to perform node draining"
+  value       = "${join("", data.template_file.kube_node_drainer_asg_ds.*.rendered)}"
+}
+
+output "kube_node_drainer_asg_status_updater" {
+  description = "Kubernetes deployment to update status when nodes are drained"
+  value       = "${join("", data.template_file.kube_node_drainer_asg_status_updater.*.rendered)}"
+}
+
+output "kube_rbac" {
+  description = "Role and rolebinding to let node drainer work as needed."
+  value       = "${join("", data.template_file.kube_rbac.*.rendered)}"
+}

@@ -21,7 +21,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     PlacementGroup                              = "${lookup(var.worker_groups_launch_template[count.index], "placement_group", local.workers_group_launch_template_defaults["placement_group"])}"
     IgnoreUnmodified                            = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_ignore_unmodified_group_size_properties", local.workers_group_launch_template_defaults["cfn_update_policy_ignore_unmodified_group_size_properties"])}"
     WaitOnResourceSignals                       = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_wait_on_resource_signals", local.workers_group_launch_template_defaults["cfn_update_policy_wait_on_resource_signals"])}"
-    NodeDrainEnabled                            = "${lookup(var.worker_groups_launch_template[count.index], "node_drain_enabled", local.workers_group_launch_template_defaults["node_drain_enabled"])}"
+    NodeDrainEnabled                            = "${var.node_drain_enabled}"
     UpdatePolicyPauseTime                       = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_pause_time", local.workers_group_launch_template_defaults["cfn_update_policy_pause_time"])}"
     HeartbeatTimeout                            = "${lookup(var.worker_groups_launch_template[count.index], "drainer_heartbeat_timeout", local.workers_group_launch_template_defaults["drainer_heartbeat_timeout"])}"
     HealthCheckType                             = "${lookup(var.worker_groups_launch_template[count.index], "health_check_type", local.workers_group_launch_template_defaults["health_check_type"])}"

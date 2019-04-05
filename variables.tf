@@ -224,3 +224,23 @@ variable "autoscaling_policies_enabled" {
   description = "Setup autoscaling policies on worker groups. Can be used instead of cluster autoscale, but should not be turned on if cluster autoscale is enabled"
   default     = "false"
 }
+
+variable "hyperkubeimage" {
+  default = "googlecontainer/hyperkube-amd64:v1.13.3"
+}
+
+variable "aws_cli_image" {
+  default = "quay.io/coreos/awscli:master"
+}
+
+variable "node_drain_enabled" {
+  description = "Whether node drain should be enabled on node group updates"
+  default     = "false"
+  type        = "string"
+}
+
+variable "enabled" {
+  type        = "string"
+  description = "Whether to create the resources. Set to `false` to prevent the module from creating any resources"
+  default     = "true"
+}
