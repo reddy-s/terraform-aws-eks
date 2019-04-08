@@ -22,7 +22,7 @@ output "cluster_endpoint" {
 output "cluster_version" {
   description = "The Kubernetes server version for the EKS cluster."
   value       = "${aws_eks_cluster.this.version}"
-}
+}cluster_security_group_idcluster_security_group_idcluster_security_group_id
 
 output "cluster_security_group_id" {
   description = "Security group ID attached to the EKS cluster."
@@ -62,6 +62,16 @@ output "workers_asg_arns" {
 output "workers_asg_names" {
   description = "Names of the autoscaling groups containing workers."
   value       = "${data.aws_autoscaling_group.workers_launch_template.*.id}"
+}
+
+output "launch_template_ids" {
+  description = "The IDs of the launch templates"
+  value       = "${aws_launch_template.workers_launch_template.*.id}"
+}
+
+output "launch_template_arns" {
+  description = "ARNs of the launch templates"
+  value       = "${aws_launch_template.workers_launch_template.*.arn}"
 }
 
 output "worker_security_group_id" {
