@@ -135,28 +135,16 @@ resource "aws_launch_template" "workers_launch_template" {
   tag_specifications {
     resource_type = "volume"
 
-    tags = "${merge(
-      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-      local.asg_tags,
-      var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
-    )}"
+    tags = "${local.asg_tags}"
   }
 
   tag_specifications {
     resource_type = "instance"
 
-    tags = "${merge(
-      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-      local.asg_tags,
-      var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
-    )}"
+    tags = "${local.asg_tags}"
   }
 
-  tags = "${merge(
-    map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-    local.asg_tags,
-    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
-  )}"
+  tags = "${local.asg_tags}"
 }
 
 resource "aws_iam_instance_profile" "workers_launch_template" {
