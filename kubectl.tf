@@ -17,7 +17,7 @@ resource "local_file" "kube_node_drainer_asg_status_updater" {
 }
 
 resource "local_file" "kube_rbac" {
-  content  = "${data.template_file.kube_node_drainer_asg_ds.rendered}"
+  content  = "${data.template_file.kube_rbac.rendered}"
   filename = "${local.kube_rbac_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
 }
