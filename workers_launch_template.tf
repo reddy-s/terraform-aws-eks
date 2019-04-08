@@ -6,14 +6,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
   name          = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
   template_body = "${file("${path.module}/cf-asg.yaml")}"
 
-  tags = "${merge(
-    map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-    map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
-    map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
-    map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
-    map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
-    map("key", "EKS", "value", "true", "propagate_at_launch", true),
-    local.asg_tags,
+  tags = "${merge(local.cluster_and_asg_tags,
     var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
   )}"
 
@@ -73,14 +66,14 @@ resource "aws_launch_template" "workers_launch_template" {
   key_name                             = "${lookup(var.worker_groups_launch_template[count.index], "key_name", local.workers_group_launch_template_defaults["key_name"])}"
   user_data                            = "${base64encode(element(data.template_file.launch_template_userdata.*.rendered, count.index))}"
   ebs_optimized                        = "${lookup(var.worker_groups_launch_template[count.index], "ebs_optimized", lookup(local.ebs_optimized, lookup(var.worker_groups_launch_template[count.index], "instance_type", local.workers_group_launch_template_defaults["instance_type"]), false))}"
-  disable_api_termination              = "${lookup(var.worker_groups_launch_template[count.index], "disable_api_termination", local.workers_group_launch_template_defaults["disable_api_termination"])}"         
+  disable_api_termination              = "${lookup(var.worker_groups_launch_template[count.index], "disable_api_termination", local.workers_group_launch_template_defaults["disable_api_termination"])}"
   credit_specification                 = ["${lookup(var.worker_groups_launch_template[count.index], "credit_specification", local.workers_group_launch_template_defaults["credit_specification"])}"]
   instance_initiated_shutdown_behavior = "${lookup(var.worker_groups_launch_template[count.index], "instance_initiated_shutdown_behavior", local.workers_group_launch_template_defaults["instance_initiated_shutdown_behavior"])}"
   instance_market_options              = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_options", local.workers_group_launch_template_defaults["instance_market_options"])}"]
 
   elastic_gpu_specifications {
     type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"
-  } 
+  }
 
   network_interfaces {
     description                 = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
