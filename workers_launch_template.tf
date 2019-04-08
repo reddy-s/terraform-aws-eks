@@ -21,7 +21,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
 
   parameters = {
     AutoScalingGroupName                        = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
-    VPCZoneIdentifier                           = ["${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "subnets", ""), local.workers_group_launch_template_defaults["subnets"])))}"]
+    VPCZoneIdentifier                           = "${split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "subnets", ""), local.workers_group_launch_template_defaults["subnets"]))}"
     LaunchTemplateId                            = "${element(aws_launch_template.workers_launch_template.*.id, count.index)}"
     LaunchTemplateVersion                       = "$Latest"
     DesiredCapacity                             = "${lookup(var.worker_groups_launch_template[count.index], "asg_desired_capacity", local.workers_group_launch_template_defaults["asg_desired_capacity"])}"
@@ -37,7 +37,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     HeartbeatTimeout                            = "${lookup(var.worker_groups_launch_template[count.index], "drainer_heartbeat_timeout", local.workers_group_launch_template_defaults["drainer_heartbeat_timeout"])}"
     HealthCheckType                             = "${lookup(var.worker_groups_launch_template[count.index], "health_check_type", local.workers_group_launch_template_defaults["health_check_type"])}"
     HealthCheckGracePeriod                      = "${lookup(var.worker_groups_launch_template[count.index], "health_check_grace_period", local.workers_group_launch_template_defaults["health_check_grace_period"])}"
-    TerminationPolicies                         = ["${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "termination_policies", ""), local.workers_group_launch_template_defaults["termination_policies"])))}"]
+    TerminationPolicies                         = "${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "termination_policies", ""), local.workers_group_launch_template_defaults["termination_policies"])))}"
     MetricsGranularity                          = "${lookup(var.worker_groups_launch_template[count.index], "metrics_granularity", local.workers_group_launch_template_defaults["metrics_granularity"])}"
     Metrics                                     = ["${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "enabled_metrics", ""), local.workers_group_launch_template_defaults["enabled_metrics"])))}"]
     Cooldown                                    = "${lookup(var.worker_groups_launch_template[count.index], "default_cooldown", local.workers_group_launch_template_defaults["default_cooldown"])}"
