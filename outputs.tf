@@ -22,7 +22,7 @@ output "cluster_endpoint" {
 output "cluster_version" {
   description = "The Kubernetes server version for the EKS cluster."
   value       = "${aws_eks_cluster.this.version}"
-}cluster_security_group_idcluster_security_group_idcluster_security_group_id
+}
 
 output "cluster_security_group_id" {
   description = "Security group ID attached to the EKS cluster."

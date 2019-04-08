@@ -21,14 +21,6 @@ resource "aws_eks_cluster" "this" {
   ]
 }
 
-resource "aws_security_group" "cluster" {
-  name_prefix = "${var.cluster_name}"
-  description = "EKS cluster security group."
-  vpc_id      = "${var.vpc_id}"
-  tags        = "${merge(var.tags, map("Name", "${var.cluster_name}-eks_cluster_sg"))}"
-  count       = "${var.cluster_create_security_group ? 1 : 0}"
-}
-
 resource "aws_iam_role" "cluster" {
   name_prefix           = "${var.cluster_name}"
   assume_role_policy    = "${data.aws_iam_policy_document.cluster_assume_role_policy.json}"
@@ -49,7 +41,7 @@ resource "aws_iam_role_policy_attachment" "cluster_AmazonEKSServicePolicy" {
 
 resource "aws_security_group" "cluster" {
   count       = "${var.enabled == "true" ? 1 : 0}"
-  name        = "${var.cluster_name}"
+  name_prefix = "${var.cluster_name}"
   description = "Security Group for EKS cluster"
   vpc_id      = "${var.vpc_id}"
   tags        = "${merge(var.tags, map("Name", "${var.cluster_name}-eks_cluster_sg"))}"

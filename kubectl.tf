@@ -21,6 +21,7 @@ resource "local_file" "kube_rbac" {
   filename = "${local.kube_rbac_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
 }
+
 resource "null_resource" "apply_node_drain" {
   depends_on = ["aws_eks_cluster.this"]
 
@@ -40,11 +41,11 @@ EOS
   }
 
   triggers {
-    kube_config_map_rendered = "${data.template_file.kubeconfig.rendered}"
-    node_drainer_rendered      = "${data.template_file.kube_node_drainer_asg_ds.rendered}"
-    node_drainer_status_updater_rendered      = "${data.template_file.kube_node_drainer_asg_status_updater.rendered}"
-    kube_rbac_rendered      = "${data.template_file.kube_rbac.rendered}"
-    endpoint                 = "${aws_eks_cluster.this.endpoint}"
+    kube_config_map_rendered             = "${data.template_file.kubeconfig.rendered}"
+    node_drainer_rendered                = "${data.template_file.kube_node_drainer_asg_ds.rendered}"
+    node_drainer_status_updater_rendered = "${data.template_file.kube_node_drainer_asg_status_updater.rendered}"
+    kube_rbac_rendered                   = "${data.template_file.kube_rbac.rendered}"
+    endpoint                             = "${aws_eks_cluster.this.endpoint}"
   }
 
   count = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"

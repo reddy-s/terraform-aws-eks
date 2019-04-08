@@ -1,36 +1,15 @@
 locals {
   asg_tags = ["${null_resource.tags_as_list_of_maps.*.triggers}"]
 
-  launch_template_tags = ["${concat(
-    list(
-      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true)
-    ),
-    local.asg_tags,
-    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
-  }"]
-
-  stack_tags = ["${concat(
-    list(
-      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-      map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
-      map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
-      map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
-      map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
-      map("key", "EKS", "value", "true", "propagate_at_launch", true)
-    ),
-    local.asg_tags,
-    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
-  }"]
-
   autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
 
   # Followed recommendation http://67bricks.com/blog/?p=85
   # to workaround terraform not supporting short circut evaluation
   cluster_security_group_id = "${coalesce(join("", aws_security_group.cluster.*.id), var.cluster_security_group_id)}"
 
-  worker_security_group_id = "${coalesce(join("", aws_security_group.workers.*.id), var.worker_security_group_id)}"
-  default_iam_role_id      = "${element(concat(aws_iam_role.workers.*.id, list("")), 0)}"
-  kubeconfig_name          = "${var.kubeconfig_name == "" ? "eks_${var.cluster_name}" : var.kubeconfig_name}"
+  worker_security_group_id                  = "${coalesce(join("", aws_security_group.workers.*.id), var.worker_security_group_id)}"
+  default_iam_role_id                       = "${element(concat(aws_iam_role.workers.*.id, list("")), 0)}"
+  kubeconfig_name                           = "${var.kubeconfig_name == "" ? "eks_${var.cluster_name}" : var.kubeconfig_name}"
   kube_node_drainer_filename                = "${var.config_output_path}kube-node-drainer-asg-ds.yaml"
   kube_node_drainer_status_updater_filename = "${var.config_output_path}kube-node-drainer-asg-status_updater.yaml"
   kube_rbac_filename                        = "${var.config_output_path}kube-rbac.yaml"
@@ -94,7 +73,7 @@ locals {
     cfn_update_policy_ignore_unmodified_group_size_properties = true        # Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group.
     cfn_update_policy_wait_on_resource_signals                = true        # Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds.
     drainer_heartbeat_timeout                                 = 300         # The amount of time (in seconds) that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Amazon EC2 Auto Scaling performs the action that you specified in the DefaultResult property.
-    cfn_update_policy_pause_time                              = "PT1M"      # The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group.
+    cfn_update_policy_pause_time                              = "PT5M"      # The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group.
     health_check_type                                         = "EC2"       # Controls how health checking is done. Valid values are `EC2` or `ELB`
     health_check_grace_period                                 = 300         # Time (in seconds) after instance comes into service before checking health
     termination_policies                                      = ["Default"] # A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`
@@ -109,10 +88,10 @@ locals {
       "ScheduledActions",
     ] # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
 
-    cfn_creation_policy_min_successful_instances_percent = 67             # Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created.
-    cfn_signal_count                                     = 1              # cfn_signal_count
-    cfn_deletion_policy                                  = "Retain"       # With the DeletionPolicy attribute you can preserve or (in some cases) backup a resource when its stack is deleted. You specify a DeletionPolicy attribute for each resource that you want to control. If a resource has no DeletionPolicy attribute, AWS CloudFormation deletes the resource by default. Allowed values: `Delete`, `Retain`, `Snapshot`
-    cfn_stack_on_failure                                 = "ROLLBACK"     # Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE.
+    cfn_creation_policy_min_successful_instances_percent = 67         # Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created.
+    cfn_signal_count                                     = 1          # cfn_signal_count
+    cfn_deletion_policy                                  = "Retain"   # With the DeletionPolicy attribute you can preserve or (in some cases) backup a resource when its stack is deleted. You specify a DeletionPolicy attribute for each resource that you want to control. If a resource has no DeletionPolicy attribute, AWS CloudFormation deletes the resource by default. Allowed values: `Delete`, `Retain`, `Snapshot`
+    cfn_stack_on_failure                                 = "ROLLBACK" # Action to be taken if stack creation fails. This must be one of: DO_NOTHING, ROLLBACK, or DELETE.
 
     ### Autoscaling policies + alarms settings
     scale_up_scaling_adjustment             = 1                  # The number of instances by which to scale. `scale_up_adjustment_type` determines the interpretation of this number (e.g. as an absolute number or as a percentage of the existing Auto Scaling group size). A positive increment adds to the current capacity and a negative value removes from the current capacity

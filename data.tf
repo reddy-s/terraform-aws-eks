@@ -89,7 +89,6 @@ data "template_file" "launch_template_userdata" {
   }
 }
 
-
 data "template_file" "kube_node_drainer_asg_ds" {
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
   template = "${file("${path.module}/templates/kube-node-drainer-asg-ds.tpl")}"

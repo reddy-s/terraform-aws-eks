@@ -5,8 +5,21 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
 
   name          = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
   template_body = "${file("cf-asg.yaml")}"
-  tags          = "${local.stack_tags}"
-  on_failure    = "${lookup(var.worker_groups_launch_template[count.index], "cfn_stack_on_failure", local.workers_group_launch_template_defaults["cfn_stack_on_failure"])}"
+
+  tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
+      map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
+      map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
+      map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
+      map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
+      map("key", "EKS", "value", "true", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
+
+  on_failure = "${lookup(var.worker_groups_launch_template[count.index], "cfn_stack_on_failure", local.workers_group_launch_template_defaults["cfn_stack_on_failure"])}"
 
   parameters = {
     AutoScalingGroupName                        = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
@@ -107,15 +120,35 @@ resource "aws_launch_template" "workers_launch_template" {
 
   tag_specifications {
     resource_type = "volume"
-    tags          = "${local.launch_template_tags}"
+
+    tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
   }
 
   tag_specifications {
     resource_type = "instance"
-    tags          = "${local.launch_template_tags}"
+
+    tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
   }
 
-  tags = "${local.launch_template_tags}"
+  tags = ["${concat(
+    list(
+      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true)
+    ),
+    local.asg_tags,
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
+  }"]
 }
 
 resource "aws_iam_instance_profile" "workers_launch_template" {
@@ -188,6 +221,7 @@ resource "aws_security_group_rule" "workers_ingress_cluster_https" {
   type                     = "ingress"
   count                    = "${var.enabled ? 1 : 0}"
 }
+
 resource "aws_security_group_rule" "ingress_security_groups" {
   count                    = "${var.enabled == "true" ? length(var.allowed_security_groups_workers) : 0}"
   description              = "Allow inbound traffic from existing Security Groups"
@@ -198,6 +232,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
   security_group_id        = "${join("", aws_security_group.workers.*.id)}"
   type                     = "ingress"
 }
+
 resource "aws_security_group_rule" "ingress_cidr_blocks" {
   count             = "${var.enabled == "true" && length(var.allowed_cidr_blocks_workers) > 0 ? 1 : 0}"
   description       = "Allow inbound traffic from CIDR blocks"
