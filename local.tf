@@ -1,15 +1,6 @@
 locals {
   asg_tags = ["${null_resource.tags_as_list_of_maps.*.triggers}"]
 
-  cluster_tags = "${merge(map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-    map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
-    map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
-    map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
-    map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
-    map("key", "EKS", "value", "true", "propagate_at_launch", true))}"
-
-  cluster_and_asg_tags = "${merge(local.asg_tags, local.cluster_tags)}"
-
   autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
 
   # Followed recommendation http://67bricks.com/blog/?p=85
