@@ -6,24 +6,22 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
   name          = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
   template_body = "${file("${path.module}/cf-asg.yaml")}"
 
-  tags = ["${concat(
-    list(
-      map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-      map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
-      map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
-      map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
-      map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
-      map("key", "EKS", "value", "true", "propagate_at_launch", true)
-    ),
+  tags = "${merge(
+    map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
+    map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
+    map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
+    map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
+    map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
+    map("key", "EKS", "value", "true", "propagate_at_launch", true),
     local.asg_tags,
-    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
-  }"]
+    var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
+  )}"
 
   on_failure = "${lookup(var.worker_groups_launch_template[count.index], "cfn_stack_on_failure", local.workers_group_launch_template_defaults["cfn_stack_on_failure"])}"
 
   parameters = {
     AutoScalingGroupName                        = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
-    VPCZoneIdentifier                           = ["${split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "subnets", ""), local.workers_group_launch_template_defaults["subnets"]))}"]
+    VPCZoneIdentifier                           = ["${join(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "subnets", ""), local.workers_group_launch_template_defaults["subnets"]))}"]
     LaunchTemplateId                            = "${element(aws_launch_template.workers_launch_template.*.id, count.index)}"
     LaunchTemplateVersion                       = "$Latest"
     DesiredCapacity                             = "${lookup(var.worker_groups_launch_template[count.index], "asg_desired_capacity", local.workers_group_launch_template_defaults["asg_desired_capacity"])}"
@@ -81,7 +79,7 @@ resource "aws_launch_template" "workers_launch_template" {
   instance_market_options              = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_options", local.workers_group_launch_template_defaults["instance_market_options"])}"]
 
   elastic_gpu_specifications {
-    type = ["${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"]
+    type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"
   } 
 
   network_interfaces {
