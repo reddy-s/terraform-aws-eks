@@ -4,7 +4,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
   count = "${var.enabled == "true" ? var.worker_group_launch_template_count : 0}"
 
   name          = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
-  template_body = "${file("cf-asg.yaml")}"
+  template_body = "${file("${path.module}/cf-asg.yaml")}"
 
   tags = ["${concat(
     list(
@@ -75,11 +75,14 @@ resource "aws_launch_template" "workers_launch_template" {
   key_name                             = "${lookup(var.worker_groups_launch_template[count.index], "key_name", local.workers_group_launch_template_defaults["key_name"])}"
   user_data                            = "${base64encode(element(data.template_file.launch_template_userdata.*.rendered, count.index))}"
   ebs_optimized                        = "${lookup(var.worker_groups_launch_template[count.index], "ebs_optimized", lookup(local.ebs_optimized, lookup(var.worker_groups_launch_template[count.index], "instance_type", local.workers_group_launch_template_defaults["instance_type"]), false))}"
-  disable_api_termination              = "${lookup(var.worker_groups_launch_template[count.index], "disable_api_termination", local.workers_group_launch_template_defaults["disable_api_termination"])}"
-  elastic_gpu_specifications           = ["${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"]
+  disable_api_termination              = "${lookup(var.worker_groups_launch_template[count.index], "disable_api_termination", local.workers_group_launch_template_defaults["disable_api_termination"])}"         
   credit_specification                 = ["${lookup(var.worker_groups_launch_template[count.index], "credit_specification", local.workers_group_launch_template_defaults["credit_specification"])}"]
   instance_initiated_shutdown_behavior = "${lookup(var.worker_groups_launch_template[count.index], "instance_initiated_shutdown_behavior", local.workers_group_launch_template_defaults["instance_initiated_shutdown_behavior"])}"
   instance_market_options              = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_options", local.workers_group_launch_template_defaults["instance_market_options"])}"]
+
+  elastic_gpu_specifications {
+    type = ["${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"]
+  } 
 
   network_interfaces {
     description                 = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
