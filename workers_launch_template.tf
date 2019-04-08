@@ -222,7 +222,7 @@ resource "aws_security_group_rule" "workers_ingress_cluster_https" {
   count                    = "${var.enabled ? 1 : 0}"
 }
 
-resource "aws_security_group_rule" "ingress_security_groups" {
+resource "aws_security_group_rule" "ingress_workers_security_groups" {
   count                    = "${var.enabled == "true" ? length(var.allowed_security_groups_workers) : 0}"
   description              = "Allow inbound traffic from existing Security Groups"
   from_port                = 0
@@ -233,7 +233,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "ingress_cidr_blocks" {
+resource "aws_security_group_rule" "ingress_workers_cidr_blocks" {
   count             = "${var.enabled == "true" && length(var.allowed_cidr_blocks_workers) > 0 ? 1 : 0}"
   description       = "Allow inbound traffic from CIDR blocks"
   from_port         = 0

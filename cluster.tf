@@ -69,7 +69,7 @@ resource "aws_security_group_rule" "ingress_workers_https" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "ingress_security_groups" {
+resource "aws_security_group_rule" "ingress_cluster_security_groups" {
   count                    = "${var.enabled == "true" ? length(var.allowed_security_groups_cluster) : 0}"
   description              = "Allow inbound traffic from existing Security Groups"
   from_port                = 0
@@ -80,7 +80,7 @@ resource "aws_security_group_rule" "ingress_security_groups" {
   type                     = "ingress"
 }
 
-resource "aws_security_group_rule" "ingress_cidr_blocks" {
+resource "aws_security_group_rule" "ingress_cluster_cidr_blocks" {
   count             = "${var.enabled == "true" && length(var.allowed_cidr_blocks_cluster) > 0 ? 1 : 0}"
   description       = "Allow inbound traffic from CIDR blocks"
   from_port         = 0
