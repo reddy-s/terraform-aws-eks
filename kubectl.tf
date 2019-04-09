@@ -5,19 +5,19 @@ resource "local_file" "kubeconfig" {
 }
 
 resource "local_file" "kube_node_drainer_asg" {
-  content  = "${data.template_file.kube_node_drainer_asg_ds.rendered}"
+  content  = "${data.template_file.kube_node_drainer_asg_ds.*.rendered}"
   filename = "${local.kube_node_drainer_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
 
 resource "local_file" "kube_node_drainer_asg_status_updater" {
-  content  = "${data.template_file.kube_node_drainer_asg_status_updater.rendered}"
+  content  = "${data.template_file.kube_node_drainer_asg_status_updater.*.rendered}"
   filename = "${local.kube_node_drainer_status_updater_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
 
 resource "local_file" "kube_rbac" {
-  content  = "${data.template_file.kube_rbac.rendered}"
+  content  = "${data.template_file.kube_rbac.*.rendered}"
   filename = "${local.kube_rbac_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
@@ -42,9 +42,9 @@ EOS
 
   triggers {
     kube_config_map_rendered             = "${data.template_file.kubeconfig.rendered}"
-    node_drainer_rendered                = "${data.template_file.kube_node_drainer_asg_ds.rendered}"
-    node_drainer_status_updater_rendered = "${data.template_file.kube_node_drainer_asg_status_updater.rendered}"
-    kube_rbac_rendered                   = "${data.template_file.kube_rbac.rendered}"
+    node_drainer_rendered                = "${data.template_file.kube_node_drainer_asg_ds.*.rendered}"
+    node_drainer_status_updater_rendered = "${data.template_file.kube_node_drainer_asg_status_updater.*.rendered}"
+    kube_rbac_rendered                   = "${data.template_file.kube_rbac.*.rendered}"
     endpoint                             = "${aws_eks_cluster.this.endpoint}"
   }
 
