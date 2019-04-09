@@ -56,7 +56,6 @@ locals {
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
     elastic_gpu_type                         = ""                                            # Type of Elastic GPU to attach to the instances
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
-    instance_market_type                     = ""                                            # The market (purchasing) option for the instances
 
     enabled_metrics = "GroupMinSize, GroupMaxSize, GroupDesiredCapacity, GroupInServiceInstances, GroupPendingInstances, GroupStandbyInstances, GroupTerminatingInstances, GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
 

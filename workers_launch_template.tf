@@ -91,10 +91,6 @@ resource "aws_launch_template" "workers_launch_template" {
     cpu_credits = "${lookup(var.worker_groups_launch_template[count.index], "cpu_credits", local.workers_group_launch_template_defaults["cpu_credits"])}"
   }
 
-  instance_market_options {
-    market_type = "${lookup(var.worker_groups_launch_template[count.index], "instance_market_type", local.workers_group_launch_template_defaults["instance_market_type"])}"
-  }
-
   elastic_gpu_specifications {
     type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_type", local.workers_group_launch_template_defaults["elastic_gpu_type"])}"
   }
