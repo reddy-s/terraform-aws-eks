@@ -54,7 +54,6 @@ locals {
     target_group_arns                        = ""                                            # A comma delimited list of ALB target group ARNs to be associated to the ASG
     cpu_credits                              = "standard"                                    # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
-    elastic_gpu_type                         = ""                                            # Type of Elastic GPU to attach to the instances
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
 
     enabled_metrics = "GroupMinSize, GroupMaxSize, GroupDesiredCapacity, GroupInServiceInstances, GroupPendingInstances, GroupStandbyInstances, GroupTerminatingInstances, GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity

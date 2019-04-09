@@ -91,10 +91,6 @@ resource "aws_launch_template" "workers_launch_template" {
     cpu_credits = "${lookup(var.worker_groups_launch_template[count.index], "cpu_credits", local.workers_group_launch_template_defaults["cpu_credits"])}"
   }
 
-  elastic_gpu_specifications {
-    type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_type", local.workers_group_launch_template_defaults["elastic_gpu_type"])}"
-  }
-
   network_interfaces {
     description                 = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
     device_index                = 0
