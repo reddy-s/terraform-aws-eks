@@ -90,7 +90,7 @@ data "template_file" "launch_template_userdata" {
 }
 
 data "template_file" "kube_node_drainer_asg_ds" {
-  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
+  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/templates/kube-node-drainer-asg-ds.tpl")}"
 
   vars {
@@ -101,7 +101,7 @@ data "template_file" "kube_node_drainer_asg_ds" {
 }
 
 data "template_file" "kube_node_drainer_asg_status_updater" {
-  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
+  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/templates/kube-node-drainer-asg-status-updater.tpl")}"
 
   vars {
@@ -114,7 +114,7 @@ data "template_file" "kube_node_drainer_asg_status_updater" {
 }
 
 data "template_file" "kube_rbac" {
-  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
+  count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? 1 : 0}"
   template = "${file("${path.module}/templates/kube-rbac.tpl")}"
 
   vars {}
