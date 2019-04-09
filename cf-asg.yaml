@@ -106,6 +106,9 @@ Parameters:
   OverrideInstanceType:
     Type: String
     Default: t3.large
+  MinSuccessfulInstancesPercent:
+    Type: Number
+    Default: 80
 Conditions:
   DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, "true"]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
@@ -173,6 +176,7 @@ Resources:
       AutoScalingRollingUpdate:
         MaxBatchSize: !Ref MaxBatchSize
         MinInstancesInService: !Ref MinSize
+        MinSuccessfulInstancesPercent: !Ref MinSuccessfulInstancesPercent
         PauseTime: !Ref UpdatePolicyPauseTime
         SuspendProcesses: !Ref UpdatePolicySuspendedProcesses
         WaitOnResourceSignals:

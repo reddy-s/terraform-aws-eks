@@ -54,6 +54,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     Cooldown                                    = "${lookup(var.worker_groups_launch_template[count.index], "default_cooldown", local.workers_group_launch_template_defaults["default_cooldown"])}"
     MaxBatchSize                                = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_max_batch_size", local.workers_group_launch_template_defaults["cfn_update_policy_max_batch_size"])}"
     UpdatePolicySuspendedProcesses              = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_suspended_processes", local.workers_group_launch_template_defaults["cfn_update_policy_suspended_processes"])}"
+    MinSuccessfulInstancesPercent               = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_min_successful_instances_percent", local.workers_group_launch_template_defaults["cfn_update_policy_min_successful_instances_percent"])}"
     CreationPolicyMinSuccessfulInstancesPercent = "${lookup(var.worker_groups_launch_template[count.index], "cfn_creation_policy_min_successful_instances_percent", local.workers_group_launch_template_defaults["cfn_creation_policy_min_successful_instances_percent"])}"
     CreationPolicyTimeout                       = "${lookup(var.worker_groups_launch_template[count.index], "cfn_creation_policy_timeout", local.workers_group_launch_template_defaults["cfn_creation_policy_timeout"])}"
     SignalCount                                 = "${lookup(var.worker_groups_launch_template[count.index], "cfn_signal_count", local.workers_group_launch_template_defaults["cfn_signal_count"])}"
@@ -130,11 +131,14 @@ resource "aws_launch_template" "workers_launch_template" {
   # tag_specifications {
   #   resource_type = "volume"
 
+
   #   tags = "${local.asg_tags}"
   # }
 
+
   # tag_specifications {
   #   resource_type = "instance"
+
 
   #   tags = "${local.asg_tags}"
   # }
