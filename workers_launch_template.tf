@@ -34,7 +34,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     AutoScalingGroupName                        = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
     VPCZoneIdentifier                           = "${lookup(var.worker_groups_launch_template[count.index], "subnets", local.workers_group_launch_template_defaults["subnets"])}"
     LaunchTemplateId                            = "${element(aws_launch_template.workers_launch_template.*.id, count.index)}"
-    LaunchTemplateVersion                       = "$Latest"
+    LaunchTemplateVersion                       = "${element(aws_launch_template.workers_launch_template.*.latest_version, count.index)}"
     DesiredCapacity                             = "${lookup(var.worker_groups_launch_template[count.index], "asg_desired_capacity", local.workers_group_launch_template_defaults["asg_desired_capacity"])}"
     MinSize                                     = "${lookup(var.worker_groups_launch_template[count.index], "asg_min_size", local.workers_group_launch_template_defaults["asg_min_size"])}"
     MaxSize                                     = "${lookup(var.worker_groups_launch_template[count.index], "asg_max_size", local.workers_group_launch_template_defaults["asg_max_size"])}"
