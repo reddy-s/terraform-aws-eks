@@ -52,7 +52,7 @@ locals {
     iam_role_id                              = "${local.default_iam_role_id}"                # Use the specified IAM role if set.
     suspended_processes                      = ""                                            # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
     target_group_arns                        = ""                                            # A comma delimited list of ALB target group ARNs to be associated to the ASG
-    cpu_credits                              = ""                                            # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+    cpu_credits                              = "standard"                                    # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
     elastic_gpu_type                         = ""                                            # Type of Elastic GPU to attach to the instances
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
