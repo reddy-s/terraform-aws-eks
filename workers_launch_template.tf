@@ -71,7 +71,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
 
 data "aws_autoscaling_group" "workers_launch_template" {
   count      = "${var.enabled == "true" ? var.worker_group_launch_template_count : 0}"
-  name       = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-AsgName"
+  name       = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
   depends_on = ["aws_cloudformation_stack.workers_launch_template"]
 }
 
