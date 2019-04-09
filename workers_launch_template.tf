@@ -38,7 +38,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     DesiredCapacity                             = "${lookup(var.worker_groups_launch_template[count.index], "asg_desired_capacity", local.workers_group_launch_template_defaults["asg_desired_capacity"])}"
     MinSize                                     = "${lookup(var.worker_groups_launch_template[count.index], "asg_min_size", local.workers_group_launch_template_defaults["asg_min_size"])}"
     MaxSize                                     = "${lookup(var.worker_groups_launch_template[count.index], "asg_max_size", local.workers_group_launch_template_defaults["asg_max_size"])}"
-    TargetGroupARNs                             = "${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "target_group_arns", ""), local.workers_group_launch_template_defaults["target_group_arns"])))}"
+    TargetGroupARNs                             = "${lookup(var.worker_groups_launch_template[count.index], "target_group_arns", local.workers_group_launch_template_defaults["target_group_arns"])}"
     ServiceLinkedRoleARN                        = "${lookup(var.worker_groups_launch_template[count.index], "service_linked_role_arn", local.workers_group_launch_template_defaults["service_linked_role_arn"])}"
     PlacementGroup                              = "${lookup(var.worker_groups_launch_template[count.index], "placement_group", local.workers_group_launch_template_defaults["placement_group"])}"
     IgnoreUnmodified                            = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_ignore_unmodified_group_size_properties", local.workers_group_launch_template_defaults["cfn_update_policy_ignore_unmodified_group_size_properties"])}"
@@ -48,12 +48,12 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     HeartbeatTimeout                            = "${lookup(var.worker_groups_launch_template[count.index], "drainer_heartbeat_timeout", local.workers_group_launch_template_defaults["drainer_heartbeat_timeout"])}"
     HealthCheckType                             = "${lookup(var.worker_groups_launch_template[count.index], "health_check_type", local.workers_group_launch_template_defaults["health_check_type"])}"
     HealthCheckGracePeriod                      = "${lookup(var.worker_groups_launch_template[count.index], "health_check_grace_period", local.workers_group_launch_template_defaults["health_check_grace_period"])}"
-    TerminationPolicies                         = "${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "termination_policies", ""), local.workers_group_launch_template_defaults["termination_policies"])))}"
+    TerminationPolicies                         = "${lookup(var.worker_groups_launch_template[count.index], "termination_policies", local.workers_group_launch_template_defaults["termination_policies"])}"
     MetricsGranularity                          = "${lookup(var.worker_groups_launch_template[count.index], "metrics_granularity", local.workers_group_launch_template_defaults["metrics_granularity"])}"
-    Metrics                                     = "${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "enabled_metrics", ""), local.workers_group_launch_template_defaults["enabled_metrics"])))}"
+    Metrics                                     = "${lookup(var.worker_groups_launch_template[count.index], "enabled_metrics", local.workers_group_launch_template_defaults["enabled_metrics"])}"
     Cooldown                                    = "${lookup(var.worker_groups_launch_template[count.index], "default_cooldown", local.workers_group_launch_template_defaults["default_cooldown"])}"
     MaxBatchSize                                = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_max_batch_size", local.workers_group_launch_template_defaults["cfn_update_policy_max_batch_size"])}"
-    UpdatePolicySuspendedProcesses              = "${compact(split(",", coalesce(lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_suspended_processes", ""), local.workers_group_launch_template_defaults["cfn_update_policy_suspended_processes"])))}"
+    UpdatePolicySuspendedProcesses              = "${lookup(var.worker_groups_launch_template[count.index], "cfn_update_policy_suspended_processes", local.workers_group_launch_template_defaults["cfn_update_policy_suspended_processes"])}"
     CreationPolicyMinSuccessfulInstancesPercent = "${lookup(var.worker_groups_launch_template[count.index], "cfn_creation_policy_min_successful_instances_percent", local.workers_group_launch_template_defaults["cfn_creation_policy_min_successful_instances_percent"])}"
     CreationPolicyTimeout                       = "${lookup(var.worker_groups_launch_template[count.index], "cfn_creation_policy_timeout", local.workers_group_launch_template_defaults["cfn_creation_policy_timeout"])}"
     SignalCount                                 = "${lookup(var.worker_groups_launch_template[count.index], "cfn_signal_count", local.workers_group_launch_template_defaults["cfn_signal_count"])}"
@@ -85,12 +85,18 @@ resource "aws_launch_template" "workers_launch_template" {
   user_data                            = "${base64encode(element(data.template_file.launch_template_userdata.*.rendered, count.index))}"
   ebs_optimized                        = "${lookup(var.worker_groups_launch_template[count.index], "ebs_optimized", lookup(local.ebs_optimized, lookup(var.worker_groups_launch_template[count.index], "instance_type", local.workers_group_launch_template_defaults["instance_type"]), false))}"
   disable_api_termination              = "${lookup(var.worker_groups_launch_template[count.index], "disable_api_termination", local.workers_group_launch_template_defaults["disable_api_termination"])}"
-  credit_specification                 = ["${lookup(var.worker_groups_launch_template[count.index], "credit_specification", local.workers_group_launch_template_defaults["credit_specification"])}"]
   instance_initiated_shutdown_behavior = "${lookup(var.worker_groups_launch_template[count.index], "instance_initiated_shutdown_behavior", local.workers_group_launch_template_defaults["instance_initiated_shutdown_behavior"])}"
-  instance_market_options              = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_options", local.workers_group_launch_template_defaults["instance_market_options"])}"]
+
+  credit_specification {
+    cpu_credits = ["${lookup(var.worker_groups_launch_template[count.index], "cpu_credits", local.workers_group_launch_template_defaults["cpu_credits"])}"]
+  }
+
+  instance_market_options {
+    market_type = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_type", local.workers_group_launch_template_defaults["instance_market_type"])}"]
+  }
 
   elastic_gpu_specifications {
-    type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_specifications", local.workers_group_launch_template_defaults["elastic_gpu_specifications"])}"
+    type = "${lookup(var.worker_groups_launch_template[count.index], "elastic_gpu_type", local.workers_group_launch_template_defaults["elastic_gpu_type"])}"
   }
 
   network_interfaces {

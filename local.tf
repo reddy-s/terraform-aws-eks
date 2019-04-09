@@ -52,41 +52,29 @@ locals {
     iam_role_id                              = "${local.default_iam_role_id}"                # Use the specified IAM role if set.
     suspended_processes                      = ""                                            # A comma delimited string of processes to to suspend. i.e. AZRebalance,HealthCheck,ReplaceUnhealthy
     target_group_arns                        = ""                                            # A comma delimited list of ALB target group ARNs to be associated to the ASG
-    credit_specification                     = []                                            # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+    cpu_credits                              = ""                                            # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
-    elastic_gpu_specifications               = []                                            # Specifications of Elastic GPU to attach to the instances
+    elastic_gpu_type                         = ""                                            # Type of Elastic GPU to attach to the instances
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
-    instance_market_options                  = []                                            # The market (purchasing) option for the instances
+    instance_market_type                     = ""                                            # The market (purchasing) option for the instances
 
-    enabled_metrics = ["GroupMinSize", "GroupMaxSize",
-      "GroupDesiredCapacity",
-      "GroupInServiceInstances",
-      "GroupPendingInstances",
-      "GroupStandbyInstances",
-      "GroupTerminatingInstances",
-      "GroupTotalInstances",
-    ] # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
+    enabled_metrics = "GroupMinSize, GroupMaxSize, GroupDesiredCapacity, GroupInServiceInstances, GroupPendingInstances, GroupStandbyInstances, GroupTerminatingInstances, GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
 
     ### Cloudformation settings
-    service_linked_role_arn                                   = ""          # The ARN of the service-linked role that the ASG will use to call other AWS services
-    placement_group                                           = ""          # The name of an existing cluster placement group into which you want to launch your instances
-    cfn_update_policy_ignore_unmodified_group_size_properties = true        # Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group.
-    cfn_update_policy_wait_on_resource_signals                = true        # Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds.
-    drainer_heartbeat_timeout                                 = 300         # The amount of time (in seconds) that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Amazon EC2 Auto Scaling performs the action that you specified in the DefaultResult property.
-    cfn_update_policy_pause_time                              = "PT5M"      # The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group.
-    health_check_type                                         = "EC2"       # Controls how health checking is done. Valid values are `EC2` or `ELB`
-    health_check_grace_period                                 = 300         # Time (in seconds) after instance comes into service before checking health
-    termination_policies                                      = ["Default"] # A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`
-    metrics_granularity                                       = "1Minute"   # The granularity to associate with the metrics to collect. The only valid value is 1Minute
-    default_cooldown                                          = 300         # The amount of time, in seconds, after a scaling activity completes before another scaling activity can start
-    cfn_update_policy_max_batch_size                          = 1           # Specifies the maximum number of instances that AWS CloudFormation updates.
+    service_linked_role_arn                                   = ""        # The ARN of the service-linked role that the ASG will use to call other AWS services
+    placement_group                                           = ""        # The name of an existing cluster placement group into which you want to launch your instances
+    cfn_update_policy_ignore_unmodified_group_size_properties = true      # Specifies whether AWS CloudFormation ignores differences in group size properties between your current Auto Scaling group and the Auto Scaling group described in the AWS::AutoScaling::AutoScalingGroup resource of your template during a stack update. If you modify any of the group size property values in your template, AWS CloudFormation uses the modified values and updates your Auto Scaling group.
+    cfn_update_policy_wait_on_resource_signals                = true      # Specifies whether the Auto Scaling group waits on signals from new instances during an update. Use this property to ensure that instances have completed installing and configuring applications before the Auto Scaling group update proceeds.
+    drainer_heartbeat_timeout                                 = 300       # The amount of time (in seconds) that can elapse before the lifecycle hook times out. When the lifecycle hook times out, Amazon EC2 Auto Scaling performs the action that you specified in the DefaultResult property.
+    cfn_update_policy_pause_time                              = "PT5M"    # The amount of time that AWS CloudFormation pauses after making a change to a batch of instances to give those instances time to start software applications. For example, you might need to specify PauseTime when scaling up the number of instances in an Auto Scaling group.
+    health_check_type                                         = "EC2"     # Controls how health checking is done. Valid values are `EC2` or `ELB`
+    health_check_grace_period                                 = 300       # Time (in seconds) after instance comes into service before checking health
+    termination_policies                                      = "Default" # A list of policies to decide how the instances in the auto scale group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `Default`
+    metrics_granularity                                       = "1Minute" # The granularity to associate with the metrics to collect. The only valid value is 1Minute
+    default_cooldown                                          = 300       # The amount of time, in seconds, after a scaling activity completes before another scaling activity can start
+    cfn_update_policy_max_batch_size                          = 1         # Specifies the maximum number of instances that AWS CloudFormation updates.
 
-    cfn_update_policy_suspended_processes = ["HealthCheck",
-      "ReplaceUnhealthy",
-      "AZRebalance",
-      "AlarmNotification",
-      "ScheduledActions",
-    ] # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
+    cfn_update_policy_suspended_processes = "HealthCheck, ReplaceUnhealthy, AZRebalance, AlarmNotification, ScheduledActions" # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
 
     cfn_creation_policy_min_successful_instances_percent = 67         # Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created.
     cfn_signal_count                                     = 1          # cfn_signal_count
