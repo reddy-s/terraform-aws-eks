@@ -100,7 +100,7 @@ resource "aws_launch_template" "workers_launch_template" {
   }
 
   iam_instance_profile = {
-    name = "${element(aws_iam_instance_profile.workers_launch_template.*.name, count.index)}"
+    arn = "${element(aws_iam_instance_profile.workers_launch_template.*.arn, count.index)}"
   }
 
   monitoring {
