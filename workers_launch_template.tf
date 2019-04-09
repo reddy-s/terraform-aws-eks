@@ -127,23 +127,6 @@ resource "aws_launch_template" "workers_launch_template" {
       delete_on_termination = true
     }
   }
-
-  # tag_specifications {
-  #   resource_type = "volume"
-
-
-  #   tags = "${local.asg_tags}"
-  # }
-
-
-  # tag_specifications {
-  #   resource_type = "instance"
-
-
-  #   tags = "${local.asg_tags}"
-  # }
-
-  tags = "${local.asg_tags}"
 }
 
 resource "aws_iam_instance_profile" "workers_launch_template" {
