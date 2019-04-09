@@ -181,3 +181,5 @@ Resources:
 Outputs:
   AsgName:
     Value: !Ref ASG
+    Export: 
+      Name: !Sub "${AWS::StackName}-AsgName"
