@@ -88,11 +88,11 @@ resource "aws_launch_template" "workers_launch_template" {
   instance_initiated_shutdown_behavior = "${lookup(var.worker_groups_launch_template[count.index], "instance_initiated_shutdown_behavior", local.workers_group_launch_template_defaults["instance_initiated_shutdown_behavior"])}"
 
   credit_specification {
-    cpu_credits = ["${lookup(var.worker_groups_launch_template[count.index], "cpu_credits", local.workers_group_launch_template_defaults["cpu_credits"])}"]
+    cpu_credits = "${lookup(var.worker_groups_launch_template[count.index], "cpu_credits", local.workers_group_launch_template_defaults["cpu_credits"])}"
   }
 
   instance_market_options {
-    market_type = ["${lookup(var.worker_groups_launch_template[count.index], "instance_market_type", local.workers_group_launch_template_defaults["instance_market_type"])}"]
+    market_type = "${lookup(var.worker_groups_launch_template[count.index], "instance_market_type", local.workers_group_launch_template_defaults["instance_market_type"])}"
   }
 
   elastic_gpu_specifications {
