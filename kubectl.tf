@@ -31,7 +31,7 @@ resource "null_resource" "apply_node_drain" {
     command = <<EOS
 for i in `seq 1 10`; do \
 echo "${null_resource.apply_node_drain.triggers.kube_config_map_rendered}" > kube_config.yaml & \
-kubectl apply -f ${local.kube_node_drainer_filename} -f ${local.kube_node_drainer_status_updater_filename} -f ${local.kube_rbac_filename} --kubeconfig kube_config.yaml && break || \
+kubectl apply -f "${local.kube_node_drainer_filename}" -f "${local.kube_node_drainer_status_updater_filename}" -f "${local.kube_rbac_filename}" --kubeconfig kube_config.yaml && break || \
 sleep 10; \
 done; \
 rm ${local.kube_node_drainer_filename} ${local.kube_node_drainer_status_updater_filename} ${local.kube_rbac_filename} kube_config.yaml;

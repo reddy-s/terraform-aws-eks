@@ -10,9 +10,9 @@ locals {
   worker_security_group_id                  = "${coalesce(join("", aws_security_group.workers.*.id), var.worker_security_group_id)}"
   default_iam_role_id                       = "${element(concat(aws_iam_role.workers.*.id, list("")), 0)}"
   kubeconfig_name                           = "${var.kubeconfig_name == "" ? "eks_${var.cluster_name}" : var.kubeconfig_name}"
-  kube_node_drainer_filename                = "${var.config_output_path}kube-node-drainer-asg-ds.yaml"
-  kube_node_drainer_status_updater_filename = "${var.config_output_path}kube-node-drainer-asg-status_updater.yaml"
-  kube_rbac_filename                        = "${var.config_output_path}kube-rbac.yaml"
+  kube_node_drainer_filename                = "${path.module}kube-node-drainer-asg-ds.yaml"
+  kube_node_drainer_status_updater_filename = "${path.module}kube-node-drainer-asg-status_updater.yaml"
+  kube_rbac_filename                        = "${path.module}kube-rbac.yaml"
 
   workers_group_launch_template_defaults_defaults = {
     name                                     = "count.index"                                 # Name of the worker group. Literal count.index will never be used but if name is not set, the count.index interpolation will be used.
