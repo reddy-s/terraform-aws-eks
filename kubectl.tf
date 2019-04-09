@@ -5,19 +5,19 @@ resource "local_file" "kubeconfig" {
 }
 
 resource "local_file" "kube_node_drainer_asg" {
-  content  = "${data.template_file.kube_node_drainer_asg_ds.*.rendered}"
+  content  = "${element(data.template_file.kube_node_drainer_asg_ds.*.rendered, count.index)}"
   filename = "${local.kube_node_drainer_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
 
 resource "local_file" "kube_node_drainer_asg_status_updater" {
-  content  = "${data.template_file.kube_node_drainer_asg_status_updater.*.rendered}"
+  content  = "${element(data.template_file.kube_node_drainer_asg_status_updater.*.rendered, count.index)}"
   filename = "${local.kube_node_drainer_status_updater_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
 
 resource "local_file" "kube_rbac" {
-  content  = "${data.template_file.kube_rbac.*.rendered}"
+  content  = "${element(data.template_file.kube_rbac.*.rendered, count.index)}"
   filename = "${local.kube_rbac_filename}"
   count    = "${var.enabled == "true" && var.node_drain_enabled == "true" ? var.worker_group_launch_template_count : 0}"
 }
