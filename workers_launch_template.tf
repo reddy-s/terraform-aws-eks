@@ -128,17 +128,17 @@ resource "aws_launch_template" "workers_launch_template" {
     }
   }
 
-  tag_specifications {
-    resource_type = "volume"
+  # tag_specifications {
+  #   resource_type = "volume"
 
-    tags = "${local.asg_tags}"
-  }
+  #   tags = "${local.asg_tags}"
+  # }
 
-  tag_specifications {
-    resource_type = "instance"
+  # tag_specifications {
+  #   resource_type = "instance"
 
-    tags = "${local.asg_tags}"
-  }
+  #   tags = "${local.asg_tags}"
+  # }
 
   tags = "${local.asg_tags}"
 }
