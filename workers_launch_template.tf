@@ -1,4 +1,14 @@
 # Worker Groups using Launch Templates
+module "label" {
+  source     = "git::https://github.com/cloudposse/terraform-terraform-label.git?ref=tags/0.2.1"
+  namespace  = "${var.namespace}"
+  stage      = "${var.stage}"
+  name       = "${var.name}"
+  delimiter  = "${var.delimiter}"
+  attributes = ["${compact(concat(var.attributes, list("workers")))}"]
+  tags       = "${var.tags}"
+  enabled    = "${var.enabled}"
+}
 
 resource "aws_cloudformation_stack" "workers_launch_template" {
   count = "${var.enabled == "true" ? var.worker_group_launch_template_count : 0}"
@@ -13,7 +23,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
     map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
     map("key", "EKS", "value", "true", "propagate_at_launch", true),
-    local.asg_tags,
+    module.label.tags,
     var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
   )}"
 
