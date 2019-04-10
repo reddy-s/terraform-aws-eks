@@ -1,5 +1,5 @@
 locals {
-  asg_tags = ["${null_resource.tags_as_list_of_maps.*.triggers}"]
+  asg_tags = "${list(null_resource.tags_as_list_of_maps.*.triggers)}"
 
   autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
 
