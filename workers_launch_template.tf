@@ -20,7 +20,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
 
   tags = ["${
     concat(
-      var.tags,
+      local.asg_tags,
       list(
         map(
           "key", "Name", 
