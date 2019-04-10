@@ -143,6 +143,7 @@ resource "aws_security_group" "workers" {
   count       = "${var.enabled ? 1 : 0}"
   tags        = "${merge(var.tags, map("Name", "${aws_eks_cluster.this.name}-eks_worker_sg", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "owned"
   ))}"
+  depends_on = ["aws_launch_template.workers_launch_template"]
 }
 
 resource "aws_security_group_rule" "workers_egress_internet" {

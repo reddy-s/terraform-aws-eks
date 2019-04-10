@@ -181,7 +181,7 @@ Resources:
         SuspendProcesses: !Ref UpdatePolicySuspendedProcesses
         WaitOnResourceSignals:
           !If [IsWaitOnResourceSignals, true, false]
-    DeletionPolicy: Retain
+    DeletionPolicy: Delete
 Outputs:
   AsgName:
     Value: !Ref ASG
