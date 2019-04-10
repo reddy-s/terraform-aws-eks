@@ -56,7 +56,7 @@ locals {
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
 
-    enabled_metrics = "GroupMinSize, GroupMaxSize, GroupDesiredCapacity, GroupInServiceInstances, GroupPendingInstances, GroupStandbyInstances, GroupTerminatingInstances, GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
+    enabled_metrics = "GroupMinSize,GroupMaxSize,GroupDesiredCapacity,GroupInServiceInstances,GroupPendingInstances,GroupStandbyInstances,GroupTerminatingInstances,GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
 
     ### Cloudformation settings
     service_linked_role_arn                                   = ""        # The ARN of the service-linked role that the ASG will use to call other AWS services
@@ -72,7 +72,7 @@ locals {
     default_cooldown                                          = 300       # The amount of time, in seconds, after a scaling activity completes before another scaling activity can start
     cfn_update_policy_max_batch_size                          = 1         # Specifies the maximum number of instances that AWS CloudFormation updates.
 
-    cfn_update_policy_suspended_processes                = "HealthCheck, ReplaceUnhealthy, AZRebalance, AlarmNotification, ScheduledActions" # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
+    cfn_update_policy_suspended_processes                = "HealthCheck,ReplaceUnhealthy,AZRebalance,AlarmNotification,ScheduledActions" # A list of processes to suspend for the AutoScaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`. Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your autoscaling group from functioning properly.
     cfn_update_policy_min_successful_instances_percent   = 67
     cfn_creation_policy_timeout                          = "PT10M"                                                                           # Timeout value for creation policy
     cfn_creation_policy_min_successful_instances_percent = 67                                                                                # Specifies the percentage of instances in an Auto Scaling replacement update that must signal success for the update to succeed. You can specify a value from 0 to 100. AWS CloudFormation rounds to the nearest tenth of a percent. For example, if you update five instances with a minimum successful percentage of 50, three instances must signal success. If an instance doesn't send a signal within the time specified by the Timeout property, AWS CloudFormation assumes that the instance wasn't created.
