@@ -39,7 +39,7 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
   #   local.asg_tags,
   #   var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
   # }"
-  
+
   on_failure = "${lookup(var.worker_groups_launch_template[count.index], "cfn_stack_on_failure", local.workers_group_launch_template_defaults["cfn_stack_on_failure"])}"
   parameters = {
     AutoScalingGroupName                        = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
