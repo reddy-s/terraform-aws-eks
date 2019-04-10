@@ -109,6 +109,10 @@ Parameters:
   MinSuccessfulInstancesPercent:
     Type: Number
     Default: 80
+  ClusterName:
+    Type: String
+  ClusterWorkerName:
+    Type: String
 Conditions:
   DrainerEnabled: !Equals [ !Ref NodeDrainEnabled, "true"]
   HasTargetGroupARNs: !Not [ !Equals [ !Join [ "", !Ref TargetGroupARNs], ""]]
@@ -162,6 +166,13 @@ Resources:
       TargetGroupARNs:
         !If [HasTargetGroupARNs, !Ref TargetGroupARNs, !Ref "AWS::NoValue"]
       Cooldown: !Ref Cooldown
+      Tags:
+        - Key: Name
+          Value: !Ref ClusterWorkerName
+          PropagateAtLaunch: true
+        - Key: !Sub kubernetes.io/cluster/${ClusterName}
+          Value: owned
+          PropagateAtLaunch: true
     CreationPolicy:
       AutoScalingCreationPolicy:
         MinSuccessfulInstancesPercent: !Ref CreationPolicyMinSuccessfulInstancesPercent
