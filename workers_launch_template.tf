@@ -23,6 +23,11 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
       key = "Name"
       value = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg"
       propagate_at_launch = true
+    },
+    {
+      key = "kubernetes.io/cluster/${aws_eks_cluster.this.name}"
+      value = "owned"
+      propagate_at_launch = true
     }
   ]
   #tags = "${merge(var.tags, map("Name", "${aws_eks_cluster.this.name}-eks_worker_sg", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "owned"))}"
