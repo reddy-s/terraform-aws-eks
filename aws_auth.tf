@@ -11,7 +11,7 @@ resource "null_resource" "update_config_map_aws_auth" {
     working_dir = "${path.module}"
 
     command = <<EOS
-for i in `seq 1 10`; do \
+for i in `seq 1 50`; do \
 echo "${null_resource.update_config_map_aws_auth.triggers.kube_config_map_rendered}" > kube_config_auth.yaml & \
 echo "${null_resource.update_config_map_aws_auth.triggers.config_map_rendered}" > aws_auth_configmap.yaml & \
 kubectl apply -f aws_auth_configmap.yaml --kubeconfig kube_config_auth.yaml && break || \
