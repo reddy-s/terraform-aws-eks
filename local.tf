@@ -1,6 +1,4 @@
 locals {
-  asg_tags = "${list(null_resource.tags_as_list_of_maps.*.triggers)}"
-
   autoscaling_enabled = "${var.enabled == "true" && var.autoscaling_policies_enabled == "true" ? true : false}"
 
   # Followed recommendation http://67bricks.com/blog/?p=85
