@@ -5,56 +5,10 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
   name          = "terraform-${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
   template_body = "${file("${path.module}/cf-asg.yaml")}"
 
-  # tags = "${concat(list(merge(
-  #   map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-  #   map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true)
-  # )),var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"]
-  # )}"
-
-  # This one works
-  #tags = "${merge(var.tags, map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false)
-  #)}"
-
-  # Do not work
-  #tags = "${local.asg_tags}"
-
-  tags = ["${
-    concat(
-      local.asg_tags,
-      list(
-        map(
-          "key", "Name", 
-          "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", 
-          "propagate_at_launch", true
-        )
-      )
-    )
-  }"]
-
-  # Don't work, only last tag in list applied
-  # tags = [
-  #   {
-  #     key = "Name"
-  #     value = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg"
-  #     propagate_at_launch = true
-  #   },
-  #   {
-  #     key = "kubernetes.io/cluster/${aws_eks_cluster.this.name}"
-  #     value = "owned"
-  #     propagate_at_launch = true
-  #   }
-  # ]
-
-
+  tags = "${var.tags}"
 
   # tags = "${concat(
   #   list(
-  #     map("key", "Name", "value", "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg", "propagate_at_launch", true),
-  #     map("key", "kubernetes.io/cluster/${aws_eks_cluster.this.name}", "value", "owned", "propagate_at_launch", true),
-  #     map("key", "k8s.io/cluster-autoscaler/${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }", "value", "true", "propagate_at_launch", false),
-  #     map("key", "k8s.io/cluster-autoscaler/${aws_eks_cluster.this.name}", "value", "", "propagate_at_launch", false),
-  #     map("key", "k8s.io/cluster-autoscaler/node-template/resources/ephemeral-storage", "value", "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi", "propagate_at_launch", false),
-  #     map("key", "EKS", "value", "true", "propagate_at_launch", true)
   #   ),
   #   local.asg_tags,
   #   var.worker_group_launch_template_tags[contains(keys(var.worker_group_launch_template_tags), "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}") ? "${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}" : "default"])
@@ -97,8 +51,10 @@ resource "aws_cloudformation_stack" "workers_launch_template" {
     SpotMaxPrice                                = "${lookup(var.worker_groups_launch_template[count.index], "spot_max_price", local.workers_group_launch_template_defaults["spot_max_price"])}"
     InstanceType                                = "${lookup(var.worker_groups_launch_template[count.index], "instance_type", local.workers_group_launch_template_defaults["instance_type"])}"
     OverrideInstanceType                        = "${lookup(var.worker_groups_launch_template[count.index], "override_instance_type", local.workers_group_launch_template_defaults["override_instance_type"])}"
-    ClusterName = "${aws_eks_cluster.this.name}"
-    ClusterWorkerName = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg"
+    ClusterName                                 = "${aws_eks_cluster.this.name}"
+    ClusterWorkerName                           = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}-eks_asg"
+    ClusterAutoscalerEnabled                    = "${lookup(var.worker_groups_launch_template[count.index], "autoscaling_enabled", local.workers_group_launch_template_defaults["autoscaling_enabled"]) == 1 ? "enabled" : "disabled"  }"
+    ClusterAutoScalerStorage                    = "${lookup(var.worker_groups_launch_template[count.index], "root_volume_size", local.workers_group_launch_template_defaults["root_volume_size"])}Gi"
   }
 }
 
