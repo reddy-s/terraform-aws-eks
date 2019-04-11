@@ -23,13 +23,13 @@ resource "local_file" "kube_rbac" {
 }
 
 resource "null_resource" "apply_node_drain" {
-  depends_on = ["aws_eks_cluster.this"]
+  depends_on = ["aws_eks_cluster.this", "aws_cloudformation_stack.workers_launch_template"]
 
   provisioner "local-exec" {
     working_dir = "${path.module}"
 
     command = <<EOS
-for i in `seq 1 10`; do \
+for i in `seq 1 50`; do \
 echo "${null_resource.apply_node_drain.triggers.kube_config_map_rendered}" > kube_config.yaml & \
 kubectl apply -f "${local.kube_node_drainer_filename}" -f "${local.kube_node_drainer_status_updater_filename}" -f "${local.kube_rbac_filename}" --kubeconfig kube_config.yaml && break || \
 sleep 10; \
