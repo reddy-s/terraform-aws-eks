@@ -42,6 +42,7 @@ locals {
     ebs_optimized                            = true                                          # sets whether to use ebs optimization on supported types.
     enable_monitoring                        = true                                          # Enables/disables detailed monitoring.
     public_ip                                = false                                         # Associate a public ip address with a worker
+    eni_delete                               = true                                          # # Delete the ENI on termination (if set to false you will have to manually delete before destroying)
     kubelet_extra_args                       = ""                                            # This string is passed directly to kubelet if set. Useful for adding labels or taints.
     subnets                                  = "${join(",", var.subnets)}"                   # A comma delimited string of subnets to place the worker nodes in. i.e. subnet-123,subnet-456,subnet-789
     autoscaling_enabled                      = false                                         # Sets whether policy and matching tags will be added to allow autoscaling.
@@ -53,6 +54,7 @@ locals {
     cpu_credits                              = "standard"                                    # The credit option for CPU usage. Can be "standard" or "unlimited". T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
     disable_api_termination                  = false                                         # If `true`, enables EC2 Instance Termination Protection
     instance_initiated_shutdown_behavior     = "terminate"                                   # Shutdown behavior for the instances. Can be `stop` or `terminate`
+    placement_group                          = ""                                            # The name of the placement group into which to launch the instances, if any.
 
     enabled_metrics = "GroupMinSize,GroupMaxSize,GroupDesiredCapacity,GroupInServiceInstances,GroupPendingInstances,GroupStandbyInstances,GroupTerminatingInstances,GroupTotalInstances" # A comma delimited list of metrics to be collected i.e. GroupMinSize,GroupMaxSize,GroupDesiredCapacity
 
