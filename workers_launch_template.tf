@@ -83,7 +83,7 @@ resource "aws_launch_template" "workers_launch_template" {
   network_interfaces {
     description                 = "${aws_eks_cluster.this.name}-${lookup(var.worker_groups_launch_template[count.index], "name", count.index)}"
     device_index                = 0
-    delete_on_termination       = true
+    delete_on_termination       = "${lookup(var.worker_groups_launch_template[count.index], "eni_delete", local.workers_group_launch_template_defaults["eni_delete"])}"
     associate_public_ip_address = "${lookup(var.worker_groups_launch_template[count.index], "public_ip", local.workers_group_launch_template_defaults["public_ip"])}"
     security_groups             = ["${local.worker_security_group_id}", "${var.worker_additional_security_group_ids}", "${compact(split(",",lookup(var.worker_groups_launch_template[count.index],"additional_security_group_ids", local.workers_group_launch_template_defaults["additional_security_group_ids"])))}"]
   }
@@ -97,7 +97,8 @@ resource "aws_launch_template" "workers_launch_template" {
   }
 
   placement {
-    tenancy = "${lookup(var.worker_groups_launch_template[count.index], "placement_tenancy", local.workers_group_launch_template_defaults["placement_tenancy"])}"
+    tenancy    = "${lookup(var.worker_groups_launch_template[count.index], "placement_tenancy", local.workers_group_launch_template_defaults["placement_tenancy"])}"
+    group_name = "${lookup(var.worker_groups_launch_template[count.index], "placement_group", local.workers_group_launch_template_defaults["placement_group"])}"
   }
 
   lifecycle {

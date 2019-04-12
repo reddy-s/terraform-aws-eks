@@ -123,7 +123,7 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | cluster\_endpoint\_public\_access | Indicates whether or not the Amazon EKS public API server endpoint is enabled. | string | `"true"` | no |
 | cluster\_name | Name of the EKS cluster. Also used as a prefix in names of related resources. | string | n/a | yes |
 | cluster\_security\_group\_id | If provided, the EKS cluster will be attached to this security group. If not given, a security group will be created with necessary ingres/egress to work with the workers and provide API access to your current IP/32. | string | `""` | no |
-| cluster\_version | Kubernetes version to use for the EKS cluster. | string | `"1.11"` | no |
+| cluster\_version | Kubernetes version to use for the EKS cluster. | string | `"1.12"` | no |
 | config\_output\_path | Where to save the Kubectl config file (if `write_kubeconfig = true`). Should end in a forward slash `/` . | string | `"./"` | no |
 | enabled | Whether to create the resources. Set to `false` to prevent the module from creating any resources | string | `"true"` | no |
 | hyperkubeimage |  | string | `"googlecontainer/hyperkube-amd64:v1.13.3"` | no |
@@ -178,6 +178,8 @@ MIT Licensed. See [LICENSE](https://github.com/terraform-aws-modules/terraform-a
 | kubeconfig\_filename | The filename of the generated kubectl config. |
 | launch\_template\_arns | ARNs of the launch templates |
 | launch\_template\_ids | The IDs of the launch templates |
+| worker\_iam\_instance\_profile\_arns | default IAM instance profile ARN for EKS worker groups |
+| worker\_iam\_instance\_profile\_names | default IAM instance profile name for EKS worker groups |
 | worker\_iam\_role\_arn | default IAM role ARN for EKS worker groups |
 | worker\_iam\_role\_name | default IAM role name for EKS worker groups |
 | worker\_security\_group\_id | Security group ID attached to the EKS workers. |
